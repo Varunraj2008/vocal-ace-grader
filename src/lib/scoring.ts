@@ -165,7 +165,7 @@ export function aggregate(scores: PerRecordingScore[]) {
   if (breakdown.wer > 0.15) suggestions.push("Slow down slightly and read each word — your word error rate is above 15%.");
   if (breakdown.wpm < 120) suggestions.push("Aim for 130–160 words per minute for a confident, natural pace.");
   if (breakdown.wpm > 180) suggestions.push("You're rushing — pause briefly between sentences.");
-  if (breakdown.silenceRatio && breakdown.fluency < 70) suggestions.push("Reduce long pauses between phrases to improve fluency.");
+  if (breakdown.fluency < 70) suggestions.push("Reduce long pauses between phrases to improve fluency.");
   if (breakdown.clarity < 70) suggestions.push("Speak closer to the microphone or adjust input volume for clearer audio.");
   if (!strengths.length) strengths.push("You completed all three passages — keep practicing daily.");
   if (!suggestions.length) suggestions.push("Great job! Focus on maintaining consistency across sessions.");
