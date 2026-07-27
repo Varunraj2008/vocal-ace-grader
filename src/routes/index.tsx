@@ -131,10 +131,10 @@ function Landing() {
                   <li key={row.session_id} className="flex items-center gap-4 p-4">
                     <div className={`grid h-9 w-9 place-items-center rounded-full font-bold ${i === 0 ? "bg-brand-gradient text-brand-foreground" : "bg-accent"}`}>{i + 1}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{row.display_name ?? "Anonymous"}</div>
-                      <div className="text-xs text-muted-foreground">Grade {row.grade}</div>
+                      <div className="font-medium truncate">{row.full_name ?? "Anonymous"}</div>
+                      <div className="text-xs text-muted-foreground">Grade {row.overall_grade}</div>
                     </div>
-                    <div className="text-lg font-bold text-gradient">{Number(row.score).toFixed(1)}</div>
+                    <div className="text-lg font-bold text-gradient">{Number(row.overall_score).toFixed(1)}</div>
                   </li>
                 ))}
               </ul>
