@@ -18,8 +18,8 @@ export const Route = createFileRoute("/leaderboard")({
 });
 
 type Row = {
-  session_id: string; display_name: string | null; avatar_url: string | null;
-  score: number; grade: string; completed_at: string;
+  session_id: string | null; full_name: string | null; avatar_url: string | null;
+  overall_score: number | null; overall_grade: string | null; completed_at: string | null;
 };
 
 function LeaderboardPage() {
@@ -62,14 +62,14 @@ function LeaderboardPage() {
             ) : (
               <ul className="divide-y">
                 {rows.map((r, i) => (
-                  <li key={r.session_id} className="flex items-center gap-4 p-4">
+                  <li key={r.session_id ?? i} className="flex items-center gap-4 p-4">
                     <div className={`grid h-10 w-10 place-items-center rounded-full font-bold ${i === 0 ? "bg-brand-gradient text-brand-foreground shadow-glow" : i < 3 ? "bg-accent" : "border"}`}>{i + 1}</div>
                     {r.avatar_url ? <img src={r.avatar_url} alt="" className="h-9 w-9 rounded-full" /> : <div className="h-9 w-9 rounded-full bg-accent" />}
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{r.display_name ?? "Anonymous"}</div>
-                      <div className="text-xs text-muted-foreground">{new Date(r.completed_at).toLocaleDateString()} · Grade {r.grade}</div>
+                      <div className="font-medium truncate">{r.full_name ?? "Anonymous"}</div>
+                      <div className="text-xs text-muted-foreground">{r.completed_at ? new Date(r.completed_at).toLocaleDateString() : ""} · Grade {r.overall_grade ?? "—"}</div>
                     </div>
-                    <div className="text-xl font-bold text-gradient">{Number(r.score).toFixed(1)}</div>
+                    <div className="text-xl font-bold text-gradient">{r.overall_score != null ? Number(r.overall_score).toFixed(1) : "—"}</div>
                   </li>
                 ))}
               </ul>
