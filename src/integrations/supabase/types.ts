@@ -14,16 +14,369 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          target: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target?: string | null
+        }
+        Relationships: []
+      }
+      analysis_results: {
+        Row: {
+          accuracy: number | null
+          avg_volume: number | null
+          cer: number | null
+          clarity: number | null
+          confidence: number | null
+          created_at: string
+          details: Json | null
+          fluency: number | null
+          id: string
+          pace: number | null
+          peak_volume: number | null
+          pronunciation: number | null
+          recording_id: string
+          silence_ratio: number | null
+          voice_quality: number | null
+          weighted_score: number | null
+          wer: number | null
+          wpm: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          avg_volume?: number | null
+          cer?: number | null
+          clarity?: number | null
+          confidence?: number | null
+          created_at?: string
+          details?: Json | null
+          fluency?: number | null
+          id?: string
+          pace?: number | null
+          peak_volume?: number | null
+          pronunciation?: number | null
+          recording_id: string
+          silence_ratio?: number | null
+          voice_quality?: number | null
+          weighted_score?: number | null
+          wer?: number | null
+          wpm?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          avg_volume?: number | null
+          cer?: number | null
+          clarity?: number | null
+          confidence?: number | null
+          created_at?: string
+          details?: Json | null
+          fluency?: number | null
+          id?: string
+          pace?: number | null
+          peak_volume?: number | null
+          pronunciation?: number | null
+          recording_id?: string
+          silence_ratio?: number | null
+          voice_quality?: number | null
+          weighted_score?: number | null
+          wer?: number | null
+          wpm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_results_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: true
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_sessions: {
+        Row: {
+          breakdown: Json | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          overall_grade: string | null
+          overall_score: number | null
+          paragraph_easy_id: string | null
+          paragraph_hard_id: string | null
+          paragraph_medium_id: string | null
+          status: string
+          strengths: Json | null
+          suggestions: Json | null
+          user_id: string
+          weaknesses: Json | null
+        }
+        Insert: {
+          breakdown?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          overall_grade?: string | null
+          overall_score?: number | null
+          paragraph_easy_id?: string | null
+          paragraph_hard_id?: string | null
+          paragraph_medium_id?: string | null
+          status?: string
+          strengths?: Json | null
+          suggestions?: Json | null
+          user_id: string
+          weaknesses?: Json | null
+        }
+        Update: {
+          breakdown?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          overall_grade?: string | null
+          overall_score?: number | null
+          paragraph_easy_id?: string | null
+          paragraph_hard_id?: string | null
+          paragraph_medium_id?: string | null
+          status?: string
+          strengths?: Json | null
+          suggestions?: Json | null
+          user_id?: string
+          weaknesses?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_sessions_paragraph_easy_id_fkey"
+            columns: ["paragraph_easy_id"]
+            isOneToOne: false
+            referencedRelation: "paragraphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_sessions_paragraph_hard_id_fkey"
+            columns: ["paragraph_hard_id"]
+            isOneToOne: false
+            referencedRelation: "paragraphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_sessions_paragraph_medium_id_fkey"
+            columns: ["paragraph_medium_id"]
+            isOneToOne: false
+            referencedRelation: "paragraphs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paragraphs: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          difficulty: string
+          id: string
+          word_count: number | null
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          difficulty: string
+          id?: string
+          word_count?: number | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          word_count?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recordings: {
+        Row: {
+          client_metrics: Json | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          paragraph_id: string
+          session_id: string
+          slot: number
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          client_metrics?: Json | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          paragraph_id: string
+          session_id: string
+          slot: number
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          client_metrics?: Json | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          paragraph_id?: string
+          session_id?: string
+          slot?: number
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordings_paragraph_id_fkey"
+            columns: ["paragraph_id"]
+            isOneToOne: false
+            referencedRelation: "paragraphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recordings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recordings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      transcripts: {
+        Row: {
+          created_at: string
+          id: string
+          raw: Json | null
+          recording_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          raw?: Json | null
+          recording_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          raw?: Json | null
+          recording_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcripts_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: true
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      leaderboard: {
+        Row: {
+          avatar_url: string | null
+          breakdown: Json | null
+          completed_at: string | null
+          full_name: string | null
+          overall_grade: string | null
+          overall_score: number | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +503,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "admin"],
+    },
   },
 } as const
