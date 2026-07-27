@@ -355,7 +355,6 @@ export type Database = {
       leaderboard: {
         Row: {
           avatar_url: string | null
-          breakdown: Json | null
           completed_at: string | null
           full_name: string | null
           overall_grade: string | null
@@ -367,13 +366,7 @@ export type Database = {
       }
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "user" | "admin"
