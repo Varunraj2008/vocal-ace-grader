@@ -48,7 +48,7 @@ export type PerRecordingScore = {
   cer: number;
   wpm: number;
   weighted: number;
-  details: Record<string, unknown>;
+  details: Record<string, number | string | boolean>;
 };
 
 const WEIGHTS = {

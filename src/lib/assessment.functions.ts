@@ -30,7 +30,7 @@ export const startAssessment = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    const ids = [session.paragraph_easy_id, session.paragraph_medium_id, session.paragraph_hard_id];
+    const ids = [session.paragraph_easy_id, session.paragraph_medium_id, session.paragraph_hard_id].filter((x): x is string => !!x);
     const { data: paragraphs } = await supabase.from("paragraphs").select("id, category, difficulty, content").in("id", ids);
     const byId = new Map((paragraphs ?? []).map((p) => [p.id, p]));
     return {
