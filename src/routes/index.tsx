@@ -22,7 +22,7 @@ function Landing() {
   const { data: top } = useQuery({
     queryKey: ["leaderboard", "top5"],
     queryFn: async () => {
-      const { data } = await supabase.from("leaderboard").select("*").limit(5);
+      const { data } = await supabase.rpc("get_leaderboard", { _limit: 5 });
       return data ?? [];
     },
   });
