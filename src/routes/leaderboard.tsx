@@ -27,8 +27,8 @@ function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await supabase.from("leaderboard").select("*").limit(100);
-    setRows((data ?? []) as Row[]);
+    const { data } = await supabase.rpc("get_leaderboard", { _limit: 100 });
+    setRows((data ?? []) as unknown as Row[]);
     setLoading(false);
   };
 

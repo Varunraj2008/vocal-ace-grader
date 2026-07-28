@@ -288,13 +288,6 @@ export type Database = {
             referencedRelation: "assessment_sessions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "recordings_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "leaderboard"
-            referencedColumns: ["session_id"]
-          },
         ]
       }
       transcripts: {
@@ -352,21 +345,21 @@ export type Database = {
       }
     }
     Views: {
-      leaderboard: {
-        Row: {
-          avatar_url: string | null
-          completed_at: string | null
-          full_name: string | null
-          overall_grade: string | null
-          overall_score: number | null
-          session_id: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          completed_at: string
+          full_name: string
+          overall_grade: string
+          overall_score: number
+          session_id: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "user" | "admin"
