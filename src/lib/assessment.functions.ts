@@ -240,20 +240,89 @@ export const finalizeAssessment = createServerFn({ method: "POST" })
     }));
     const agg = aggregate(scored);
 
+    // Per-paragraph results (video mode adds facial metrics on top of the audio score)
+    const { data: perPara } = await supabase
+      .from("assessment_results")
+      .select("*")
+      .eq("assessment_id", data.sessionId)
+      .order("paragraph_number");
+
+    const videoRows = (perPara ?? []).filter((r) => r.video_score != null);
+    const hasVideo = videoRows.length > 0;
+    const avg = (xs: number[]) => (xs.length ? +(xs.reduce((s, v) => s + v, 0) / xs.length).toFixed(2) : 0);
+    const videoAvg = avg(videoRows.map((r) => Number(r.video_score)));
+    const audioAvg = agg.overall;
+    const overall = combineScores(audioAvg, videoAvg, hasVideo);
+
+    const videoBreakdown = hasVideo
+      ? {
+          eyeContact: avg(videoRows.map((r) => Number(r.eye_contact_score ?? 0))),
+          facialEngagement: avg(videoRows.map((r) => Number(r.facial_engagement_score ?? 0))),
+          facialExpressiveness: avg(videoRows.map((r) => Number(r.facial_expressiveness_score ?? 0))),
+          headStability: avg(videoRows.map((r) => Number(r.head_stability_score ?? 0))),
+          faceVisibility: avg(videoRows.map((r) => Number(r.face_visibility_score ?? 0))),
+          weights: SCORE_WEIGHTS,
+        }
+      : null;
+
+    const strengths = [...agg.strengths];
+    const weaknesses = [...agg.weaknesses];
+    const suggestions = [...agg.suggestions];
+    if (videoBreakdown) {
+      const entries: [string, number][] = [
+        ["Eye contact", videoBreakdown.eyeContact],
+        ["Facial engagement", videoBreakdown.facialEngagement],
+        ["Facial expressiveness", videoBreakdown.facialExpressiveness],
+        ["Head stability", videoBreakdown.headStability],
+        ["Face visibility", videoBreakdown.faceVisibility],
+      ];
+      for (const [label, val] of entries) {
+        if (val >= 85) strengths.push(`${label} is excellent (${val}).`);
+        else if (val < 65) {
+          weaknesses.push(`${label} needs work (${val}).`);
+          suggestions.push(
+            label === "Eye contact"
+              ? "Look toward the camera lens more consistently while speaking."
+              : label === "Head stability"
+                ? "Settle into a steady posture to reduce continuous head movement."
+                : label === "Face visibility"
+                  ? "Sit directly in front of the camera so your face stays fully in frame."
+                  : "Aim for natural, moderate facial expression while speaking.",
+          );
+        }
+      }
+    }
+
     const { error: uErr } = await supabase
       .from("assessment_sessions")
       .update({
         status: "completed",
-        overall_score: agg.overall,
-        overall_grade: agg.grade,
+        mode: hasVideo ? "video" : "audio",
+        overall_score: overall,
+        audio_score: audioAvg,
+        video_score: hasVideo ? videoAvg : null,
+        overall_grade: gradeFor(overall),
         breakdown: agg.breakdown as never,
-        strengths: agg.strengths as never,
-        weaknesses: agg.weaknesses as never,
-        suggestions: agg.suggestions as never,
+        video_breakdown: videoBreakdown as never,
+        strengths: strengths as never,
+        weaknesses: weaknesses as never,
+        suggestions: suggestions as never,
         completed_at: new Date().toISOString(),
       })
       .eq("id", data.sessionId);
     if (uErr) throw new Error(uErr.message);
 
-    return { sessionId: data.sessionId, ...agg };
+    return {
+      sessionId: data.sessionId,
+      ...agg,
+      overall,
+      grade: gradeFor(overall),
+      audioScore: audioAvg,
+      videoScore: hasVideo ? videoAvg : null,
+      videoBreakdown,
+      paragraphs: perPara ?? [],
+      strengths,
+      weaknesses,
+      suggestions,
+    };
   });
