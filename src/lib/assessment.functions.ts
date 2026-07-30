@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { scoreRecording, aggregate, loudnessScore, type RecordingMetrics } from "@/lib/scoring";
+import { scoreRecording, aggregate, loudnessScore, gradeFor, type RecordingMetrics } from "@/lib/scoring";
 import { scoreVideoFrames, combineScores, SCORE_WEIGHTS } from "@/lib/videoScoring";
 
 const StartInput = z.object({}).optional();
