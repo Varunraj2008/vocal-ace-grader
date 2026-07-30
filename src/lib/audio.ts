@@ -22,10 +22,13 @@ const TARGET_SAMPLE_RATE = 16000;
 const SILENCE_RMS = 0.008;
 const CLIP_THRESHOLD = 0.98;
 
-export async function startRecorder(): Promise<Recorder> {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-  });
+export async function startRecorder(existingStream?: MediaStream): Promise<Recorder> {
+  const ownsStream = !existingStream;
+  const stream =
+    existingStream ??
+    (await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    }));
   const ctx = new AudioContext();
   const source = ctx.createMediaStreamSource(stream);
   const processor = ctx.createScriptProcessor(4096, 1, 1);
@@ -70,7 +73,7 @@ export async function startRecorder(): Promise<Recorder> {
   };
 
   const stop = async () => {
-    stream.getTracks().forEach((t) => t.stop());
+    if (ownsStream) stream.getTracks().forEach((t) => t.stop());
     processor.disconnect();
     source.disconnect();
     const durationSeconds = getElapsed();
@@ -101,7 +104,7 @@ export async function startRecorder(): Promise<Recorder> {
     stop,
     pause: () => { if (!paused) { paused = true; pausedAt = performance.now(); } },
     resume: () => { if (paused) { pausedAccum += performance.now() - pausedAt; paused = false; } },
-    cancel: () => { stream.getTracks().forEach((t) => t.stop()); processor.disconnect(); source.disconnect(); ctx.close(); },
+    cancel: () => { if (ownsStream) stream.getTracks().forEach((t) => t.stop()); processor.disconnect(); source.disconnect(); ctx.close(); },
     onLevel: (cb) => { levelCb = cb; },
     getElapsed,
   };
