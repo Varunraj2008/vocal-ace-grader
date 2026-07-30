@@ -13,7 +13,6 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedVideoAssessmentRouteImport } from './routes/_authenticated/video-assessment'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedAssessmentRouteImport } from './routes/_authenticated/assessment'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -38,12 +37,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedVideoAssessmentRoute =
-  AuthenticatedVideoAssessmentRouteImport.update({
-    id: '/video-assessment',
-    path: '/video-assessment',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -73,7 +66,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/video-assessment': typeof AuthenticatedVideoAssessmentRoute
   '/results/$sessionId': typeof AuthenticatedResultsSessionIdRoute
 }
 export interface FileRoutesByTo {
@@ -83,7 +75,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/video-assessment': typeof AuthenticatedVideoAssessmentRoute
   '/results/$sessionId': typeof AuthenticatedResultsSessionIdRoute
 }
 export interface FileRoutesById {
@@ -95,7 +86,6 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/assessment': typeof AuthenticatedAssessmentRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/_authenticated/video-assessment': typeof AuthenticatedVideoAssessmentRoute
   '/_authenticated/results/$sessionId': typeof AuthenticatedResultsSessionIdRoute
 }
 export interface FileRouteTypes {
@@ -107,7 +97,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assessment'
     | '/profile'
-    | '/video-assessment'
     | '/results/$sessionId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -117,7 +106,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assessment'
     | '/profile'
-    | '/video-assessment'
     | '/results/$sessionId'
   id:
     | '__root__'
@@ -128,7 +116,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/assessment'
     | '/_authenticated/profile'
-    | '/_authenticated/video-assessment'
     | '/_authenticated/results/$sessionId'
   fileRoutesById: FileRoutesById
 }
@@ -169,13 +156,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/video-assessment': {
-      id: '/_authenticated/video-assessment'
-      path: '/video-assessment'
-      fullPath: '/video-assessment'
-      preLoaderRoute: typeof AuthenticatedVideoAssessmentRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -211,7 +191,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAssessmentRoute: typeof AuthenticatedAssessmentRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedVideoAssessmentRoute: typeof AuthenticatedVideoAssessmentRoute
   AuthenticatedResultsSessionIdRoute: typeof AuthenticatedResultsSessionIdRoute
 }
 
@@ -219,7 +198,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAssessmentRoute: AuthenticatedAssessmentRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedVideoAssessmentRoute: AuthenticatedVideoAssessmentRoute,
   AuthenticatedResultsSessionIdRoute: AuthenticatedResultsSessionIdRoute,
 }
 

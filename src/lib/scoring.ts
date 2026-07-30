@@ -172,10 +172,3 @@ export function aggregate(scores: PerRecordingScore[]) {
 
   return { overall, grade, breakdown, strengths, weaknesses, suggestions };
 }
-
-/** Loudness sub-score derived from measured average volume (deterministic). */
-export function loudnessScore(avgVolume: number, clipping: boolean): number {
-  const target = 0.15;
-  const miss = Math.abs(avgVolume - target) / target;
-  return clamp(Math.round(100 - Math.min(miss, 2) * 45 - (clipping ? 15 : 0)));
-}
