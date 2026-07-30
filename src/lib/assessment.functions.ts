@@ -4,12 +4,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { scoreRecording, aggregate, loudnessScore, gradeFor, type RecordingMetrics } from "@/lib/scoring";
 import { scoreVideoFrames, combineScores, SCORE_WEIGHTS } from "@/lib/videoScoring";
 
-const StartInput = z.object({}).optional();
+const StartInput = z.object({ mode: z.enum(["audio", "video"]).default("audio") }).partial().optional();
 
 export const startAssessment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => StartInput.parse(d ?? {}))
-  .handler(async ({ context }) => {
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     // pick 1 random paragraph per difficulty
     const pick = async (diff: string) => {
@@ -26,7 +26,7 @@ export const startAssessment = createServerFn({ method: "POST" })
 
     const { data: session, error } = await supabase
       .from("assessment_sessions")
-      .insert({ user_id: userId, paragraph_easy_id: easy, paragraph_medium_id: medium, paragraph_hard_id: hard })
+      .insert({ user_id: userId, mode: data?.mode ?? "audio", paragraph_easy_id: easy, paragraph_medium_id: medium, paragraph_hard_id: hard })
       .select("id, paragraph_easy_id, paragraph_medium_id, paragraph_hard_id")
       .single();
     if (error) throw new Error(error.message);
