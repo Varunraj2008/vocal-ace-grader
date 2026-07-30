@@ -1,14 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { scoreRecording, aggregate, type RecordingMetrics } from "@/lib/scoring";
+import { scoreRecording, aggregate, loudnessScore, gradeFor, type RecordingMetrics } from "@/lib/scoring";
+import { scoreVideoFrames, combineScores, SCORE_WEIGHTS } from "@/lib/videoScoring";
 
-const StartInput = z.object({}).optional();
+const StartInput = z.object({ mode: z.enum(["audio", "video"]).default("audio") }).partial().optional();
 
 export const startAssessment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => StartInput.parse(d ?? {}))
-  .handler(async ({ context }) => {
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     // pick 1 random paragraph per difficulty
     const pick = async (diff: string) => {
@@ -25,7 +26,7 @@ export const startAssessment = createServerFn({ method: "POST" })
 
     const { data: session, error } = await supabase
       .from("assessment_sessions")
-      .insert({ user_id: userId, paragraph_easy_id: easy, paragraph_medium_id: medium, paragraph_hard_id: hard })
+      .insert({ user_id: userId, mode: data?.mode ?? "audio", paragraph_easy_id: easy, paragraph_medium_id: medium, paragraph_hard_id: hard })
       .select("id, paragraph_easy_id, paragraph_medium_id, paragraph_hard_id")
       .single();
     if (error) throw new Error(error.message);
@@ -39,6 +40,23 @@ export const startAssessment = createServerFn({ method: "POST" })
     };
   });
 
+const FaceFrameSchema = z.object({
+  t: z.number(),
+  faceCount: z.number(),
+  present: z.boolean(),
+  yaw: z.number(),
+  pitch: z.number(),
+  roll: z.number(),
+  gazeOffset: z.number(),
+  lookingAtCamera: z.boolean(),
+  faceWidthRatio: z.number(),
+  centerX: z.number(),
+  centerY: z.number(),
+  brightness: z.number(),
+  expression: z.number(),
+  motion: z.number(),
+});
+
 const SubmitInput = z.object({
   sessionId: z.string().uuid(),
   slot: z.number().int().min(1).max(3),
@@ -51,6 +69,8 @@ const SubmitInput = z.object({
     silenceRatio: z.number(),
     clipping: z.boolean(),
   }),
+  /** Present only for video-mode assessments. Landmark-derived frame samples (no raw video). */
+  faceFrames: z.array(FaceFrameSchema).max(4000).optional(),
 });
 
 export const submitRecording = createServerFn({ method: "POST" })
@@ -138,7 +158,49 @@ export const submitRecording = createServerFn({ method: "POST" })
       { onConflict: "recording_id" },
     );
 
-    return { recordingId, transcript, score: s };
+    // ---- Video (facial) analysis — only when frames were captured client-side ----
+    let videoScore: ReturnType<typeof scoreVideoFrames> | null = null;
+    if (data.faceFrames && data.faceFrames.length) {
+      videoScore = scoreVideoFrames(data.faceFrames);
+      await supabase
+        .from("recordings")
+        .update({ video_metrics: videoScore as never })
+        .eq("id", recordingId);
+    }
+
+    const audioSub = {
+      loudness: loudnessScore(metrics.avgVolume, metrics.clipping),
+      clarity: s.clarity,
+      fluency: s.fluency,
+      speakingRate: s.pace,
+    };
+    const overall = combineScores(s.weighted, videoScore?.video ?? 0, !!videoScore && !videoScore.insufficientData);
+
+    await supabase.from("assessment_results").upsert(
+      {
+        user_id: userId,
+        assessment_id: data.sessionId,
+        paragraph_id: data.paragraphId,
+        paragraph_number: data.slot,
+        mode: videoScore ? "video" : "audio",
+        audio_score: s.weighted,
+        video_score: videoScore ? videoScore.video : null,
+        overall_score: overall,
+        loudness_score: audioSub.loudness,
+        clarity_score: audioSub.clarity,
+        fluency_score: audioSub.fluency,
+        speaking_rate_score: audioSub.speakingRate,
+        eye_contact_score: videoScore ? videoScore.eyeContact : null,
+        facial_engagement_score: videoScore ? videoScore.facialEngagement : null,
+        facial_expressiveness_score: videoScore ? videoScore.facialExpressiveness : null,
+        head_stability_score: videoScore ? videoScore.headStability : null,
+        face_visibility_score: videoScore ? videoScore.faceVisibility : null,
+        details: (videoScore ? { video: videoScore, audio: audioSub } : { audio: audioSub }) as never,
+      },
+      { onConflict: "assessment_id,paragraph_number" },
+    );
+
+    return { recordingId, transcript, score: s, audioSub, video: videoScore, overall };
   });
 
 const FinalizeInput = z.object({ sessionId: z.string().uuid() });
@@ -178,20 +240,89 @@ export const finalizeAssessment = createServerFn({ method: "POST" })
     }));
     const agg = aggregate(scored);
 
+    // Per-paragraph results (video mode adds facial metrics on top of the audio score)
+    const { data: perPara } = await supabase
+      .from("assessment_results")
+      .select("*")
+      .eq("assessment_id", data.sessionId)
+      .order("paragraph_number");
+
+    const videoRows = (perPara ?? []).filter((r) => r.video_score != null);
+    const hasVideo = videoRows.length > 0;
+    const avg = (xs: number[]) => (xs.length ? +(xs.reduce((s, v) => s + v, 0) / xs.length).toFixed(2) : 0);
+    const videoAvg = avg(videoRows.map((r) => Number(r.video_score)));
+    const audioAvg = agg.overall;
+    const overall = combineScores(audioAvg, videoAvg, hasVideo);
+
+    const videoBreakdown = hasVideo
+      ? {
+          eyeContact: avg(videoRows.map((r) => Number(r.eye_contact_score ?? 0))),
+          facialEngagement: avg(videoRows.map((r) => Number(r.facial_engagement_score ?? 0))),
+          facialExpressiveness: avg(videoRows.map((r) => Number(r.facial_expressiveness_score ?? 0))),
+          headStability: avg(videoRows.map((r) => Number(r.head_stability_score ?? 0))),
+          faceVisibility: avg(videoRows.map((r) => Number(r.face_visibility_score ?? 0))),
+          weights: SCORE_WEIGHTS,
+        }
+      : null;
+
+    const strengths = [...agg.strengths];
+    const weaknesses = [...agg.weaknesses];
+    const suggestions = [...agg.suggestions];
+    if (videoBreakdown) {
+      const entries: [string, number][] = [
+        ["Eye contact", videoBreakdown.eyeContact],
+        ["Facial engagement", videoBreakdown.facialEngagement],
+        ["Facial expressiveness", videoBreakdown.facialExpressiveness],
+        ["Head stability", videoBreakdown.headStability],
+        ["Face visibility", videoBreakdown.faceVisibility],
+      ];
+      for (const [label, val] of entries) {
+        if (val >= 85) strengths.push(`${label} is excellent (${val}).`);
+        else if (val < 65) {
+          weaknesses.push(`${label} needs work (${val}).`);
+          suggestions.push(
+            label === "Eye contact"
+              ? "Look toward the camera lens more consistently while speaking."
+              : label === "Head stability"
+                ? "Settle into a steady posture to reduce continuous head movement."
+                : label === "Face visibility"
+                  ? "Sit directly in front of the camera so your face stays fully in frame."
+                  : "Aim for natural, moderate facial expression while speaking.",
+          );
+        }
+      }
+    }
+
     const { error: uErr } = await supabase
       .from("assessment_sessions")
       .update({
         status: "completed",
-        overall_score: agg.overall,
-        overall_grade: agg.grade,
+        mode: hasVideo ? "video" : "audio",
+        overall_score: overall,
+        audio_score: audioAvg,
+        video_score: hasVideo ? videoAvg : null,
+        overall_grade: gradeFor(overall),
         breakdown: agg.breakdown as never,
-        strengths: agg.strengths as never,
-        weaknesses: agg.weaknesses as never,
-        suggestions: agg.suggestions as never,
+        video_breakdown: videoBreakdown as never,
+        strengths: strengths as never,
+        weaknesses: weaknesses as never,
+        suggestions: suggestions as never,
         completed_at: new Date().toISOString(),
       })
       .eq("id", data.sessionId);
     if (uErr) throw new Error(uErr.message);
 
-    return { sessionId: data.sessionId, ...agg };
+    return {
+      sessionId: data.sessionId,
+      ...agg,
+      overall,
+      grade: gradeFor(overall),
+      audioScore: audioAvg,
+      videoScore: hasVideo ? videoAvg : null,
+      videoBreakdown,
+      paragraphs: perPara ?? [],
+      strengths,
+      weaknesses,
+      suggestions,
+    };
   });

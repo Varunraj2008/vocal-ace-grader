@@ -7,7 +7,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Mic2, LogOut, Trophy, User as UserIcon, Shield, Menu } from "lucide-react";
+import { Mic2, LogOut, Trophy, User as UserIcon, Shield, Menu, Video } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 
@@ -54,6 +54,7 @@ export function Nav() {
         <div className="hidden md:flex items-center gap-1">
           <NavLink to="/leaderboard" icon={<Trophy className="h-4 w-4" />}>Leaderboard</NavLink>
           {user && <NavLink to="/assessment" icon={<Mic2 className="h-4 w-4" />}>Assessment</NavLink>}
+          {user && <NavLink to="/video-assessment" icon={<Video className="h-4 w-4" />}>Video</NavLink>}
           {user && <NavLink to="/profile" icon={<UserIcon className="h-4 w-4" />}>Profile</NavLink>}
           {isAdmin && <NavLink to="/admin" icon={<Shield className="h-4 w-4" />}>Admin</NavLink>}
         </div>
@@ -71,7 +72,8 @@ export function Nav() {
                 <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild><Link to="/profile"><UserIcon className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/assessment"><Mic2 className="mr-2 h-4 w-4" />New assessment</Link></DropdownMenuItem>
+                {<DropdownMenuItem asChild><Link to="/assessment"><Mic2 className="mr-2 h-4 w-4" />New audio assessment</Link></DropdownMenuItem>}
+                <DropdownMenuItem asChild><Link to="/video-assessment"><Video className="mr-2 h-4 w-4" />New video assessment</Link></DropdownMenuItem>
                 {isAdmin && <DropdownMenuItem asChild><Link to="/admin"><Shield className="mr-2 h-4 w-4" />Admin</Link></DropdownMenuItem>}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut}><LogOut className="mr-2 h-4 w-4" />Sign out</DropdownMenuItem>
@@ -88,6 +90,7 @@ export function Nav() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild><Link to="/leaderboard">Leaderboard</Link></DropdownMenuItem>
               {user && <DropdownMenuItem asChild><Link to="/assessment">Assessment</Link></DropdownMenuItem>}
+              {user && <DropdownMenuItem asChild><Link to="/video-assessment">Video assessment</Link></DropdownMenuItem>}
               {user && <DropdownMenuItem asChild><Link to="/profile">Profile</Link></DropdownMenuItem>}
               {isAdmin && <DropdownMenuItem asChild><Link to="/admin">Admin</Link></DropdownMenuItem>}
             </DropdownMenuContent>

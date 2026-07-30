@@ -112,12 +112,94 @@ export type Database = {
           },
         ]
       }
+      assessment_results: {
+        Row: {
+          assessment_id: string
+          audio_score: number | null
+          clarity_score: number | null
+          created_at: string
+          details: Json | null
+          eye_contact_score: number | null
+          face_visibility_score: number | null
+          facial_engagement_score: number | null
+          facial_expressiveness_score: number | null
+          fluency_score: number | null
+          head_stability_score: number | null
+          id: string
+          loudness_score: number | null
+          mode: string
+          overall_score: number | null
+          paragraph_id: string | null
+          paragraph_number: number
+          speaking_rate_score: number | null
+          updated_at: string
+          user_id: string
+          video_score: number | null
+        }
+        Insert: {
+          assessment_id: string
+          audio_score?: number | null
+          clarity_score?: number | null
+          created_at?: string
+          details?: Json | null
+          eye_contact_score?: number | null
+          face_visibility_score?: number | null
+          facial_engagement_score?: number | null
+          facial_expressiveness_score?: number | null
+          fluency_score?: number | null
+          head_stability_score?: number | null
+          id?: string
+          loudness_score?: number | null
+          mode?: string
+          overall_score?: number | null
+          paragraph_id?: string | null
+          paragraph_number: number
+          speaking_rate_score?: number | null
+          updated_at?: string
+          user_id: string
+          video_score?: number | null
+        }
+        Update: {
+          assessment_id?: string
+          audio_score?: number | null
+          clarity_score?: number | null
+          created_at?: string
+          details?: Json | null
+          eye_contact_score?: number | null
+          face_visibility_score?: number | null
+          facial_engagement_score?: number | null
+          facial_expressiveness_score?: number | null
+          fluency_score?: number | null
+          head_stability_score?: number | null
+          id?: string
+          loudness_score?: number | null
+          mode?: string
+          overall_score?: number | null
+          paragraph_id?: string | null
+          paragraph_number?: number
+          speaking_rate_score?: number | null
+          updated_at?: string
+          user_id?: string
+          video_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_results_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessment_sessions: {
         Row: {
+          audio_score: number | null
           breakdown: Json | null
           completed_at: string | null
           created_at: string
           id: string
+          mode: string
           overall_grade: string | null
           overall_score: number | null
           paragraph_easy_id: string | null
@@ -127,13 +209,17 @@ export type Database = {
           strengths: Json | null
           suggestions: Json | null
           user_id: string
+          video_breakdown: Json | null
+          video_score: number | null
           weaknesses: Json | null
         }
         Insert: {
+          audio_score?: number | null
           breakdown?: Json | null
           completed_at?: string | null
           created_at?: string
           id?: string
+          mode?: string
           overall_grade?: string | null
           overall_score?: number | null
           paragraph_easy_id?: string | null
@@ -143,13 +229,17 @@ export type Database = {
           strengths?: Json | null
           suggestions?: Json | null
           user_id: string
+          video_breakdown?: Json | null
+          video_score?: number | null
           weaknesses?: Json | null
         }
         Update: {
+          audio_score?: number | null
           breakdown?: Json | null
           completed_at?: string | null
           created_at?: string
           id?: string
+          mode?: string
           overall_grade?: string | null
           overall_score?: number | null
           paragraph_easy_id?: string | null
@@ -159,6 +249,8 @@ export type Database = {
           strengths?: Json | null
           suggestions?: Json | null
           user_id?: string
+          video_breakdown?: Json | null
+          video_score?: number | null
           weaknesses?: Json | null
         }
         Relationships: [
@@ -250,6 +342,7 @@ export type Database = {
           slot: number
           storage_path: string
           user_id: string
+          video_metrics: Json | null
         }
         Insert: {
           client_metrics?: Json | null
@@ -261,6 +354,7 @@ export type Database = {
           slot: number
           storage_path: string
           user_id: string
+          video_metrics?: Json | null
         }
         Update: {
           client_metrics?: Json | null
@@ -272,6 +366,7 @@ export type Database = {
           slot?: number
           storage_path?: string
           user_id?: string
+          video_metrics?: Json | null
         }
         Relationships: [
           {
@@ -351,13 +446,16 @@ export type Database = {
       get_leaderboard: {
         Args: { _limit?: number }
         Returns: {
+          audio_score: number
           avatar_url: string
           completed_at: string
           full_name: string
+          mode: string
           overall_grade: string
           overall_score: number
           session_id: string
           user_id: string
+          video_score: number
         }[]
       }
     }
