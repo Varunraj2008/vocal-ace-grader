@@ -157,7 +157,49 @@ export const submitRecording = createServerFn({ method: "POST" })
       { onConflict: "recording_id" },
     );
 
-    return { recordingId, transcript, score: s };
+    // ---- Video (facial) analysis — only when frames were captured client-side ----
+    let videoScore: ReturnType<typeof scoreVideoFrames> | null = null;
+    if (data.faceFrames && data.faceFrames.length) {
+      videoScore = scoreVideoFrames(data.faceFrames);
+      await supabase
+        .from("recordings")
+        .update({ video_metrics: videoScore as never })
+        .eq("id", recordingId);
+    }
+
+    const audioSub = {
+      loudness: loudnessScore(metrics.avgVolume, metrics.clipping),
+      clarity: s.clarity,
+      fluency: s.fluency,
+      speakingRate: s.pace,
+    };
+    const overall = combineScores(s.weighted, videoScore?.video ?? 0, !!videoScore && !videoScore.insufficientData);
+
+    await supabase.from("assessment_results").upsert(
+      {
+        user_id: userId,
+        assessment_id: data.sessionId,
+        paragraph_id: data.paragraphId,
+        paragraph_number: data.slot,
+        mode: videoScore ? "video" : "audio",
+        audio_score: s.weighted,
+        video_score: videoScore ? videoScore.video : null,
+        overall_score: overall,
+        loudness_score: audioSub.loudness,
+        clarity_score: audioSub.clarity,
+        fluency_score: audioSub.fluency,
+        speaking_rate_score: audioSub.speakingRate,
+        eye_contact_score: videoScore ? videoScore.eyeContact : null,
+        facial_engagement_score: videoScore ? videoScore.facialEngagement : null,
+        facial_expressiveness_score: videoScore ? videoScore.facialExpressiveness : null,
+        head_stability_score: videoScore ? videoScore.headStability : null,
+        face_visibility_score: videoScore ? videoScore.faceVisibility : null,
+        details: (videoScore ? { video: videoScore, audio: audioSub } : { audio: audioSub }) as never,
+      },
+      { onConflict: "assessment_id,paragraph_number" },
+    );
+
+    return { recordingId, transcript, score: s, audioSub, video: videoScore, overall };
   });
 
 const FinalizeInput = z.object({ sessionId: z.string().uuid() });
