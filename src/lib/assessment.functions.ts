@@ -39,6 +39,23 @@ export const startAssessment = createServerFn({ method: "POST" })
     };
   });
 
+const FaceFrameSchema = z.object({
+  t: z.number(),
+  faceCount: z.number(),
+  present: z.boolean(),
+  yaw: z.number(),
+  pitch: z.number(),
+  roll: z.number(),
+  gazeOffset: z.number(),
+  lookingAtCamera: z.boolean(),
+  faceWidthRatio: z.number(),
+  centerX: z.number(),
+  centerY: z.number(),
+  brightness: z.number(),
+  expression: z.number(),
+  motion: z.number(),
+});
+
 const SubmitInput = z.object({
   sessionId: z.string().uuid(),
   slot: z.number().int().min(1).max(3),
@@ -51,6 +68,8 @@ const SubmitInput = z.object({
     silenceRatio: z.number(),
     clipping: z.boolean(),
   }),
+  /** Present only for video-mode assessments. Landmark-derived frame samples (no raw video). */
+  faceFrames: z.array(FaceFrameSchema).max(4000).optional(),
 });
 
 export const submitRecording = createServerFn({ method: "POST" })
