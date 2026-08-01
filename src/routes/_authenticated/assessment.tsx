@@ -94,8 +94,13 @@ function AssessmentPage() {
         return;
       }
       // Upload to storage
-      const { data: userRes } = await supabase.auth.getUser();
-      const uid = userRes.user!.id;
+      const { data: sessionRes } = await supabase.auth.getSession();
+      let uid = sessionRes.session?.user?.id ?? null;
+      if (!uid) {
+        const { data: userRes } = await supabase.auth.getUser();
+        uid = userRes?.user?.id ?? null;
+      }
+      if (!uid) throw new Error("Your session expired — please sign in again.");
       const path = `${uid}/${sessionId}/slot-${current + 1}.wav`;
       const up = await supabase.storage.from("recordings").upload(path, blob, { contentType: "audio/wav", upsert: true });
       if (up.error) throw new Error(up.error.message);
