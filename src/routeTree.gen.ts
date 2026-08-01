@@ -19,6 +19,7 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedResultsSessionIdRouteImport } from './routes/_authenticated/results.$sessionId'
 import { Route as AuthenticatedAdminLeaderboardRouteImport } from './routes/_authenticated/admin/leaderboard'
+import { Route as AuthenticatedAdminStudentStudentIdRouteImport } from './routes/_authenticated/admin/student.$studentId'
 
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
@@ -71,6 +72,12 @@ const AuthenticatedAdminLeaderboardRoute =
     path: '/leaderboard',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminStudentStudentIdRoute =
+  AuthenticatedAdminStudentStudentIdRouteImport.update({
+    id: '/student/$studentId',
+    path: '/student/$studentId',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/admin/leaderboard': typeof AuthenticatedAdminLeaderboardRoute
   '/results/$sessionId': typeof AuthenticatedResultsSessionIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/student/$studentId': typeof AuthenticatedAdminStudentStudentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,6 +100,7 @@ export interface FileRoutesByTo {
   '/admin/leaderboard': typeof AuthenticatedAdminLeaderboardRoute
   '/results/$sessionId': typeof AuthenticatedResultsSessionIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/student/$studentId': typeof AuthenticatedAdminStudentStudentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,6 +114,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/leaderboard': typeof AuthenticatedAdminLeaderboardRoute
   '/_authenticated/results/$sessionId': typeof AuthenticatedResultsSessionIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/student/$studentId': typeof AuthenticatedAdminStudentStudentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/admin/leaderboard'
     | '/results/$sessionId'
     | '/admin/'
+    | '/admin/student/$studentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/admin/leaderboard'
     | '/results/$sessionId'
     | '/admin'
+    | '/admin/student/$studentId'
   id:
     | '__root__'
     | '/'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/leaderboard'
     | '/_authenticated/results/$sessionId'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/student/$studentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -221,18 +234,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminLeaderboardRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/student/$studentId': {
+      id: '/_authenticated/admin/student/$studentId'
+      path: '/student/$studentId'
+      fullPath: '/admin/student/$studentId'
+      preLoaderRoute: typeof AuthenticatedAdminStudentStudentIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminLeaderboardRoute: typeof AuthenticatedAdminLeaderboardRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminStudentStudentIdRoute: typeof AuthenticatedAdminStudentStudentIdRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminLeaderboardRoute: AuthenticatedAdminLeaderboardRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+    AuthenticatedAdminStudentStudentIdRoute:
+      AuthenticatedAdminStudentStudentIdRoute,
   }
 
 const AuthenticatedAdminRouteRouteWithChildren =
