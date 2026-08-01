@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { startRecorder, type Recorder } from "@/lib/audio";
 import { toast } from "sonner";
 import { Mic, Square, RotateCcw, ChevronRight, CheckCircle2, Loader2, PlayCircle } from "lucide-react";
+import { useRole } from "@/hooks/useRole";
+
 
 export const Route = createFileRoute("/_authenticated/assessment")({
   head: () => ({
@@ -36,9 +38,15 @@ type SlotState = {
 
 function AssessmentPage() {
   const navigate = useNavigate();
+  const { isAdmin, isLoading: roleLoading } = useRole();
+  // Admins cannot take assessments.
+  useEffect(() => {
+    if (!roleLoading && isAdmin) navigate({ to: "/admin/leaderboard", replace: true });
+  }, [isAdmin, roleLoading, navigate]);
   const start = useServerFn(startAssessment);
   const submit = useServerFn(submitRecording);
   const finalize = useServerFn(finalizeAssessment);
+
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [paragraphs, setParagraphs] = useState<Para[]>([]);
   const [current, setCurrent] = useState(0);
