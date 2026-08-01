@@ -133,14 +133,16 @@ export const adminGetStudent = createServerFn({ method: "POST" })
       completed.slice().sort((a, b) => Number(b.overall_score) - Number(a.overall_score))[0]?.id ??
       null;
 
+    type Row = Record<string, any>;
     let detail: {
-      session: unknown;
-      recordings: unknown[];
-      transcripts: unknown[];
-      analyses: unknown[];
-      paragraphs: unknown[];
+      session: Row;
+      recordings: Row[];
+      transcripts: Row[];
+      analyses: Row[];
+      paragraphs: Row[];
       signedUrls: { id: string; url: string | null }[];
     } | null = null;
+
 
     if (selectedId) {
       const { data: session } = await supabaseAdmin
