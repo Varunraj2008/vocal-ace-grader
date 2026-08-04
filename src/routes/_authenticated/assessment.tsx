@@ -41,7 +41,7 @@ function AssessmentPage() {
   const { isAdmin, isLoading: roleLoading } = useRole();
   // Admins cannot take assessments.
   useEffect(() => {
-    if (!roleLoading && isAdmin) navigate({ to: "/admin/leaderboard", replace: true });
+    if (!roleLoading && isAdmin) navigate({ to: "/admin", replace: true });
   }, [isAdmin, roleLoading, navigate]);
   const start = useServerFn(startAssessment);
   const submit = useServerFn(submitRecording);

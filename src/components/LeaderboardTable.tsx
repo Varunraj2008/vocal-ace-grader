@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown, ChevronRight as Chevron } from "lucide-react";
+import { formatDateTime } from "@/lib/datetime";
 
 export type LeaderboardRow = {
   session_id: string | null;
@@ -180,7 +181,7 @@ export function LeaderboardTable({ onRowClick }: { onRowClick?: (row: Leaderboar
                         <td className="py-3 text-right tabular-nums">{r.accuracy != null ? Number(r.accuracy).toFixed(1) : "—"}</td>
                         <td className="py-3 text-right tabular-nums">{r.fluency != null ? Number(r.fluency).toFixed(1) : "—"}</td>
                         <td className="py-3 text-right text-muted-foreground">
-                          {r.completed_at ? new Date(r.completed_at).toLocaleDateString() : "—"}
+                          {formatDateTime(r.completed_at)}
                         </td>
                         {onRowClick && (
                           <td className="py-3 text-right text-muted-foreground"><Chevron className="h-4 w-4" /></td>
