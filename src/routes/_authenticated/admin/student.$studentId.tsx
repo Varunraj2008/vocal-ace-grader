@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, ArrowLeft, Trash2, Mail, CalendarDays, Building2, Medal } from "lucide-react";
 import { toast } from "sonner";
+import { formatDateTime } from "@/lib/datetime";
 
 const searchSchema = z.object({ session: z.string().optional() });
 
@@ -98,7 +99,7 @@ function StudentDetailPage() {
               <span className="inline-flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" />{department}</span>
               <span className="inline-flex items-center gap-1.5">
                 <CalendarDays className="h-3.5 w-3.5" />
-                {active?.completed_at ? new Date(active.completed_at).toLocaleString() : "No completed assessment"}
+                {active?.completed_at ? formatDateTime(active.completed_at) : "No completed assessment"}
               </span>
             </div>
           </div>
@@ -125,7 +126,7 @@ function StudentDetailPage() {
                     h.id === selectedId ? "border-transparent bg-brand-gradient text-brand-foreground shadow-glow" : ""
                   }`}
                 >
-                  {h.completed_at ? new Date(h.completed_at).toLocaleDateString() : "In progress"} ·{" "}
+                  {h.completed_at ? formatDateTime(h.completed_at) : "In progress"} ·{" "}
                   {h.overall_score != null ? Number(h.overall_score).toFixed(1) : h.status}
                 </button>
               ))}

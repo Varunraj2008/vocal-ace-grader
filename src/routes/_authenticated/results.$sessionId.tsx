@@ -28,7 +28,7 @@ function ResultsPage() {
 
   // Admins never view the learner-facing results flow.
   useEffect(() => {
-    if (!roleLoading && isAdmin) navigate({ to: "/admin/leaderboard", replace: true });
+    if (!roleLoading && isAdmin) navigate({ to: "/admin", replace: true });
   }, [isAdmin, roleLoading, navigate]);
 
   const { data, isLoading } = useQuery({

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Users, Award, ClipboardCheck, TrendingUp, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatDateTime } from "@/lib/datetime";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -41,7 +42,7 @@ function AdminPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Users" value={s.data?.totalUsers ?? "—"} icon={<Users className="h-4 w-4" />} />
+        <StatCard label="Total users" value={s.data?.totalUsers ?? "—"} icon={<Users className="h-4 w-4" />} />
         <StatCard label="Sessions" value={s.data?.totalSessions ?? "—"} icon={<ClipboardCheck className="h-4 w-4" />} />
         <StatCard label="Average score" value={s.data?.averageScore ? s.data.averageScore.toFixed(1) : "—"} icon={<TrendingUp className="h-4 w-4" />} />
         <StatCard label="Top score" value={s.data?.highestScore ? Number(s.data.highestScore).toFixed(1) : "—"} icon={<Award className="h-4 w-4" />} />
@@ -66,7 +67,7 @@ function AdminPage() {
                     <td className="text-muted-foreground">{row.email}</td>
                     <td>{row.stats.count}</td>
                     <td>{row.stats.best ? <Badge className="border-0 bg-brand-gradient text-brand-foreground">{Number(row.stats.best).toFixed(1)}</Badge> : "—"}</td>
-                    <td className="text-muted-foreground">{row.stats.last ? new Date(row.stats.last).toLocaleString() : "—"}</td>
+                    <td className="text-muted-foreground">{formatDateTime(row.stats.last)}</td>
                     <td className="text-muted-foreground"><ChevronRight className="h-4 w-4" /></td>
                   </tr>
                 ))}
