@@ -14,19 +14,40 @@ export const adminStats = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await ensureAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [users, sessions, completed] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("assessment_sessions").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("assessment_sessions").select("overall_score").eq("status", "completed"),
+    const { data: adminRows } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
+    const adminIds = new Set((adminRows ?? []).map((r) => r.user_id));
+
+    const [profiles, sessions] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id"),
+      supabaseAdmin.from("assessment_sessions").select("user_id, overall_score, status, completed_at"),
     ]);
-    const scores = (completed.data ?? []).map((r) => Number(r.overall_score)).filter((n) => !Number.isNaN(n));
+    const userIds = (profiles.data ?? []).map((p) => p.id).filter((id) => !adminIds.has(id));
+    const userSessions = (sessions.data ?? []).filter((s) => !adminIds.has(s.user_id));
+    const completedRows = userSessions.filter((s) => s.status === "completed" && s.overall_score != null);
+    const scores = completedRows.map((r) => Number(r.overall_score)).filter((n) => !Number.isNaN(n));
+
+    // Best score per non-admin user, for the top performer card.
+    const bestByUser = new Map<string, number>();
+    for (const r of completedRows) {
+      const v = Number(r.overall_score);
+      if (!bestByUser.has(r.user_id) || v > bestByUser.get(r.user_id)!) bestByUser.set(r.user_id, v);
+    }
+    const top = [...bestByUser.entries()].sort((a, b) => b[1] - a[1])[0] ?? null;
+    let topPerformer: { id: string; name: string | null; avatar_url: string | null; score: number } | null = null;
+    if (top) {
+      const { data: tp } = await supabaseAdmin
+        .from("profiles").select("id, full_name, avatar_url").eq("id", top[0]).maybeSingle();
+      topPerformer = { id: top[0], name: tp?.full_name ?? null, avatar_url: tp?.avatar_url ?? null, score: top[1] };
+    }
+
     return {
-      totalUsers: users.count ?? 0,
-      totalSessions: sessions.count ?? 0,
+      totalUsers: userIds.length,
+      totalSessions: userSessions.length,
       completedSessions: scores.length,
       averageScore: scores.length ? +(scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(2) : 0,
       highestScore: scores.length ? Math.max(...scores) : 0,
       lowestScore: scores.length ? Math.min(...scores) : 0,
+      topPerformer,
     };
   });
 
@@ -38,12 +59,17 @@ export const adminListUsers = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await ensureAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: adminRows } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
+    const adminIds = new Set((adminRows ?? []).map((r) => r.user_id));
+
     let q = supabaseAdmin
       .from("profiles").select("id, email, full_name, avatar_url, created_at").order("created_at", { ascending: false }).limit(200);
     if (data?.search) q = q.ilike("email", `%${data.search}%`);
-    const { data: profiles, error } = await q;
+    const { data: allProfiles, error } = await q;
     if (error) throw new Error(error.message);
-    const ids = (profiles ?? []).map((p) => p.id);
+    // Administrator accounts are never listed as participants.
+    const profiles = (allProfiles ?? []).filter((p) => !adminIds.has(p.id));
+    const ids = profiles.map((p) => p.id);
     const { data: sessions } = await supabaseAdmin
       .from("assessment_sessions").select("user_id, overall_score, completed_at, status").in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
     const byUser = new Map<string, { best: number; count: number; last: string | null }>();
@@ -56,8 +82,23 @@ export const adminListUsers = createServerFn({ method: "POST" })
       }
       byUser.set(s.user_id, prev);
     }
-    return (profiles ?? []).map((p) => ({ ...p, stats: byUser.get(p.id) ?? { best: 0, count: 0, last: null } }));
+    return profiles.map((p) => ({ ...p, stats: byUser.get(p.id) ?? { best: 0, count: 0, last: null } }));
   });
+
+/** Administrator's own profile overview: account info + recent admin activity. */
+export const adminProfileOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await ensureAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin
+      .from("profiles").select("id, email, full_name, avatar_url, created_at").eq("id", context.userId).maybeSingle();
+    const { data: logs } = await supabaseAdmin
+      .from("admin_logs").select("id, action, target, metadata, created_at")
+      .eq("admin_id", context.userId).order("created_at", { ascending: false }).limit(10);
+    return { profile, logs: logs ?? [] };
+  });
+
 
 const SessionInput = z.object({ sessionId: z.string().uuid() });
 
